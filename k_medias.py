@@ -58,10 +58,10 @@ def main() :
 	#Lista com os centroides de cada cluster
 	lista_centroide = [ [] for _ in range(k_num)]
 
-	entrada = input("Insira o nome do arquivo, numero de clusters e o numero de interações separados com um espaco:\n")
+	entrada = input("Insira o nome do arquivo, número de clusters e o número de iterações separados com um espaco:\n")
 
-	#Recebe a entrada na ordem : Nome do arquivo, NUmero de Clusters e Numero de interações
-	arq,k_num,num_int = entrada.split(" ")
+	#Recebe a entrada na ordem : Nome do arquivo, Número de Clusters e Número de iterações
+	arq, k_num, num_int = entrada.split(" ")
 
 	#Converte as variaves de str para int
 	k_num = int(k_num)
@@ -81,6 +81,7 @@ def main() :
 	
 	#Coloca os dataframe em ordem aleatoria
 	r = data.sample(frac = 1)
+
 	#Obtem a quantidade de objetos em cada cluster
 	v = data.shape[0]/k_num
 
