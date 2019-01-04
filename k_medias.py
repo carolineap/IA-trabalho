@@ -1,6 +1,6 @@
 '''
 	O algoritmo ao invez de separar os dataframes para representar clusters diferentes, ele cria uma nova columa 
-	chamada 'cluster' sendo que cada numero representa um cluster diferente.
+	chamada 'cluster' sendo que cada número representa um cluster diferente.
 
 
 '''
@@ -45,7 +45,7 @@ def associa_cluster(lista_centroide,x) :
 	for k in range(k_num) :
 		#Calculo da distancia Euclidiana
 		new_dist = dist_eclid(data.iloc[x,1],data.iloc[x,2],lista_centroide[k][0],lista_centroide[k][1])
-		if min_dist > new_dist :
+		if min_dist > new_dist:
 			min_dist = new_dist
 			n_cluster = k
 		print(min_dist)
@@ -82,7 +82,7 @@ def main() :
 	#Coloca os dataframe em ordem aleatoria
 	r = data.sample(frac = 1)
 
-	#Obtem a quantidade de objetos em cada cluster
+	#Obtém a quantidade de objetos em cada cluster
 	v = data.shape[0]/k_num
 
 	for i in range(k_num) :
@@ -92,7 +92,7 @@ def main() :
 	#Ordena o dataframe
 	data = r.sort_index(axis=0)
 
-	print("Clusters aleatorios criados")
+	print("Clusters aleatórios criados")
 	print(data)
 	
 	#Calcula os centroides dos clusters
