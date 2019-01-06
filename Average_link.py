@@ -8,8 +8,6 @@ import pandas as pd
 import numpy as np
 import math
 import random
-#from pandas.plotting import lag_plot
-
 #printar no terminal do linux
 import matplotlib.pyplot as plt
 import scipy as sp  # SciPy (signal and image processing library)
@@ -18,7 +16,6 @@ from pylab import *              # Matplotlib's pylab interface
 from scipy.cluster.hierarchy import dendrogram, linkage
 import scipy.spatial.distance as ssd
 from scipy.spatial.distance import squareform, pdist
-from scipy.spatial import distance_matrix
 
 #dataframe
 data = None
@@ -29,8 +26,8 @@ k_Max = 0
 #Acha a distância média entre os objetos do cluster
 def min_value_matrix(matrix) :
 	
-	aux = np.tril(matrix, -1) #pega apenas o triangulo inferior da matriz
-	index = np.where( aux==np.min(aux[np.nonzero(aux)])) #indices do menor valor da matriz (exceto zero)
+	aux = np.tril(matrix, -1) #pega apenas o triângulo inferior da matriz
+	index = np.where(aux == np.min(aux[np.nonzero(aux)])) #indices do menor valor da matriz (exceto zero)
 	#print(index)
 
 	row = index[0][0]
@@ -40,9 +37,6 @@ def min_value_matrix(matrix) :
 
 	return(dist_min, row, column)	
 				
-def dist_euclid(x1,y1,x2,y2) :
-	return (((x1 - x2) ** 2) + ((y1 - y2) ** 2 )) ** (1/2)
-
 def print_matrix(matrix) :
 	for a in matrix:
 		print(a)
@@ -63,13 +57,11 @@ def main() :
 	#Lê o arquivo dado e cria uma dataframe com ele
 	data = pd.read_csv('datasets/' + arq, delimiter = "\t")
 
+	arq = arq.replace('.txt', '')
+
 	#Pega a quantidade de objetos existentes
 	qtd = data.shape[0]
 
-	#Insere uma nova coluna chamado cluster com o valor = 0
-	data['cluster'] = range(qtd)
-
-	
 	#Lista usada para armazenar o numero do cluster e a quais objetos estão inclusos no cluster
 	clusters = [[] for _ in range(qtd)]
 
@@ -81,29 +73,19 @@ def main() :
 		clusters[x].append(x)
 		clusters[x].append(x)
 
-	#dist_matrix = squareform(pdist(data.iloc[:, 1:]))
-	dist_matrix = distance_matrix(data.iloc[:, 1:], data.iloc[:, 1:])
+	#Cria matriz de distâncias euclidianas
+	dist_matrix = squareform(pdist(data.iloc[:, 1:], 'euclidean'))
 
-
-	#a = ssd.squareform(dist_matrix) 
+	#Insere uma nova coluna chamado cluster com o valor = 0 - quant
+	data['cluster'] = range(qtd)
 
 	#Iterador necessário para a construção do dendograma
 	j = qtd
 	
-	#Por segurança
-	if k_Max == qtd:
-		save = data[[data.columns[0], 'cluster']]
-		#Escreve em um arquivo o dataframe, header = False é utilizado para tirar o nome das colunas e o index=False para tirar 
-		#os numeros da indexação que fica na primeira coluna.
-		save.to_csv("cluster-k=9" + "-" + arq, sep='\t', encoding='utf-8', index = False, header = False)
-
 	#Iterador necessário para gerar as partições resultantes
 	k = qtd - 1
 
-
-
 	for i in range(qtd-1):
-
 
 		dist_min, cluster_1, cluster_2 = min_value_matrix(dist_matrix)
 
@@ -113,59 +95,46 @@ def main() :
 		#Insere na matrix de dendrograma o merge realizado
 		dend.append([clusters[cluster_1][0], clusters[cluster_2][0], dist_min, len(clusters[cluster_1]) + len(clusters[cluster_2]) - 2])
 		
-		
-
 		data['cluster'] = data['cluster'].replace(clusters[cluster_1][0], j)
 		data['cluster'] = data['cluster'].replace(clusters[cluster_2][0], j)
 
-
-
-		#print(data['cluster'])
-
 		if (k >= k_Min and k <= k_Max):
 			
-			save = data
-			
-			print(save)
+			save = data.copy()			
 
+			save['cluster'] = pd.factorize(save['cluster'])[0] #transforma o número de clusters entre 0 e k - 1
 
-			save = save.sort_values(by=['cluster', save.columns[0]])
-			save['cluster'] = pd.factorize(save['cluster'])[0]
 			#Escreve em um arquivo o dataframe, header = False é utilizado para tirar o nome das colunas e o index=False para tirar 
 			#os numeros da indexação que fica na primeira coluna.
-			save[[save.columns[0], 'cluster']].to_csv("cluster-k=" + str(k) + "-" + arq, sep='\t', encoding='utf-8', index = False, header = False)
-
+			save[[save.columns[0], 'cluster']].to_csv("results/average/" + arq + "-k=" + str(k) + ".clu", sep='\t', encoding='utf-8', index = False, header = False)
 
 			#Define um color map a ser utilizado
-			#obs: pode coloar o que acharem melhor, eu escolhi esse por ser diferente o 0 do 1.
-			cmap = plt.cm.get_cmap('Set1', k)
+			cmap = plt.get_cmap('gist_rainbow')			
+			
+			#gera k cores diferentes
+			NUM_COLORS = k	
 
-			print(save)
-
-			#data.plot(kind = "scatter", x = 1, y=2, color =cmap(data['cluster']))
+			#gera gráfico
 			fig, ax = plt.subplots()
+			ax.set_prop_cycle('color', [cmap(1.*i/NUM_COLORS) for i in range(NUM_COLORS)])
 			for key, group in save.groupby('cluster'):
-				print(key)
-				ax.scatter(group.iloc[:,1], group.iloc[:,2], label=key, color = cmap(group['cluster']))
-
-
-			#ax.scatter(data.iloc[:,1],data.iloc[:,2], color = cmap(data['cluster']))
-			#for i in range(data['cluster']) :
-			#	ax.plot(0, ,marker="X", color = cmap(k), label='Pos.Centroide' + str(k) )
+				ax.scatter(group.iloc[:,1], group.iloc[:,2], label=key)
+			
+			#insere legendas	
 			ax.legend()
 
-
+			#exibe gráfico. programa para de executar. para continuar, basta fechar a janela de exibição do gráfico
 			plt.show()
 
-
-
+			#Caso queria salvar o gráfico
+			#plt.savefig("results/average/plots/"  + arq + "-k=" + str(k) + ".png")
+		
 		#Realiza a atualização da matrix utilizando a operação abaixo:
-		#dist[a,b][c] = mean(dist[a][c] + dist[b][c])
+		#dist[a,b][c] = (dist[a][c] * size(a) + dist[b][c] * size(b))/(size(a) + size(b))
 		for x in range(len(dist_matrix[cluster_1])):
 			if x != cluster_1:
-				dist_matrix[cluster_1][x] = (dist_matrix[cluster_1][x] + dist_matrix[cluster_2][x])/2
+				dist_matrix[cluster_1][x] = (dist_matrix[cluster_1][x] * (len(clusters[cluster_1]) - 1) + dist_matrix[cluster_2][x] * (len(clusters[cluster_2]) - 1)) /(len(clusters[cluster_1]) + len(clusters[cluster_2]) - 2)
 				dist_matrix[x][cluster_1] = dist_matrix[cluster_1][x]
-
 
 
 		#Faz o merge dos clusters
@@ -174,21 +143,15 @@ def main() :
 		clusters[cluster_1].extend(clusters[cluster_2])
 		del clusters[cluster_2]
 		
-
 		k -= 1
-
 		j += 1
 
+		#retira linha e coluna que não são mais necessárias
 		dist_matrix = np.delete(dist_matrix,cluster_2, 0)
 		dist_matrix = np.delete(dist_matrix,cluster_2, 1)
 
-		
-
-
-	#dend = linkage(a, 'average')
-	print(dend)
-	dn = dendrogram(dend, labels = list(data.loc[:, data.columns[0]]))
-	plt.show()
-
+	#Gera e exibe dendograma	
+	#dn = dendrogram(dend, labels = list(data.loc[:, data.columns[0]]))
+	#plt.show()
 
 if __name__ == '__main__': main()
