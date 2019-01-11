@@ -40,8 +40,8 @@ def main():
 	elif op == 3:
 		data = pd.read_csv('datasets/monkeyReal1.clu', delimiter = "\t")
 		real_partition = data.iloc[:, 1].tolist()
-		ari(real_partition, 'single', 5, 12, 'monkey')
-		ari(real_partition, 'avg', 5, 12, 'monkey')
-		ari(real_partition, 'kmeans', 5, 12, 'monkey')
+		#ari(real_partition, 'single', 5, 12, 'monkey')
+		#ari(real_partition, 'avg', 5, 12, 'monkey')
+		#ari(real_partition, 'kmeans', 5, 12, 'monkey')
 
 if __name__ == '__main__': main()
